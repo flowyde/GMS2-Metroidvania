@@ -132,6 +132,9 @@ states.idle = function(){
 	if (vspd != 0) {
 		current_state = states.jump;
 	}
+	if down {
+		current_state = states.crounch;
+	}
 };
 
 states.move = function(){
@@ -144,6 +147,18 @@ states.move = function(){
 	
 	if (vspd != 0) {
 		current_state = states.jump;
+	}
+	if down {
+		current_state = states.crounch;
+	}
+};
+
+states.crounch = function(){
+	state_name = "crounch"; // Nome do estado, usado em debug
+	change_sprite(spr_player_crounch); // Chamando metodo pra trocar o sprite do player
+	
+	if (hspd != 0 || vspd != 0 || !down) {
+		current_state = states.idle;
 	}
 };
 
