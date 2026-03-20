@@ -1,7 +1,2 @@
-movimento();
-
-current_state();
-
-if pause game_end();
-	
-if restart game_restart();
+// controles(); // Chama o script de controles
+current_state(); // Chama o script atual da maquina de estados
