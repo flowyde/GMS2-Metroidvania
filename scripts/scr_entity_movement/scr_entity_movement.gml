@@ -7,14 +7,14 @@ function entity_movement(horizontal_speed, vertical_speed, collidables = obj_col
 	var _vspd		=	vertical_speed;
 	var _sign_h		=	sign(_hspd);
 	var _sign_v		=	sign(_vspd);
-	var _sub_pixel 	=	0.5;
+	static __sub_pixel 	=	0.5;
 	
 	#region Movimento Horizontal
 		// Checando a colisão horizontal
 		if (place_meeting(x + _hspd, y, collidables)) {
 			
 			// Enquanto não estiver colidindo, soma a posição de X com o "sign" do sub pixel da velocidade horizontal
-			var _check_pixel = _sub_pixel * _sign_h
+			var _check_pixel = __sub_pixel * _sign_h
 			while (!place_meeting(x + _check_pixel, y, collidables)) {
 				x += _check_pixel;
 			}	
@@ -39,7 +39,7 @@ function entity_movement(horizontal_speed, vertical_speed, collidables = obj_col
 		if (place_meeting(x, y + _vspd, collidables)) {
 			
 			// Enquanto não estiver colidindo, soma a posição de Y com o "sign" do sub pixel da velocidade vertical
-			var _check_pixel = _sub_pixel * _sign_v
+			var _check_pixel = __sub_pixel * _sign_v
 			while (!place_meeting(x, y + _check_pixel, collidables)) {
 				y += _check_pixel;
 			}
