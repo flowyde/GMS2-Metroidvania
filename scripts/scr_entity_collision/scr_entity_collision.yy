@@ -1,9 +1,9 @@
 {
   "$GMScript":"v1",
-  "%Name":"scr_entity_movement",
+  "%Name":"scr_entity_collision",
   "isCompatibility":false,
   "isDnD":false,
-  "name":"scr_entity_movement",
+  "name":"scr_entity_collision",
   "parent":{
     "name":"scripts",
     "path":"folders/scripts.yy",

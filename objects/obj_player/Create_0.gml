@@ -12,6 +12,12 @@
 	// Pra checar se o player está no chão
 	on_ground = true;
 
+	// Pra checar se o player pode se mover
+	can_move = true;
+
+	// Pra checar se o player pode pular
+	can_jump = true;
+
 	#region Pulo
 		
 		jump_buffer_time = 3; // Janela de frames em que o pulo fica "Guardado"
@@ -27,6 +33,8 @@
 		max_jump_force	= [-3.4, -2.6]; // Define o valor maximo da força do pulo 1 & 2
 		jump_window		= [18, 10]; 	// Tempo maximo (em frames) que o jogador pode pressionar o pulo 1 & 2
 		
+		jump_boost_window = 100;
+
 		// Coyote time
 		coyote_window = 8; // Tempo maximo (em frames) que o player pode ficar no ar e ainda conseguir perfomar um pulo
 		coyote_timer = coyote_window; // Tempo que falta pro player fazer o pulo estando no ar, famoso coyote time
@@ -44,49 +52,71 @@
 		
 		if (attack) current_state = states.attack;
 		
-		// Multiplicando a velocidade horizontal com o input e a velocidade maxima
-	    hspd = lerp(hspd, horizontal_input * max_hspd, acceleration);
+		#region Logica de pulo
 		
-		// Não necessariamente o player está no modo de pulo quando ele aperta o botão de pulo,
-		// Então apenas guardamos o pulo no buffer
-		// Se o botão de pulo for pressionado, inicia o buffer timer do pulo
-		if (jump_press) {
-			jump_buffer_timer = jump_buffer_time;
-			current_state = states.jump;
-		}
-	
-		// Se o buffer timer não chegar a zero ...
-		if (jump_buffer_timer > 0) {
-			jump_buffered = true; // ... ativa o buffer (pulo guardado)
-			jump_buffer_timer--; // ... e decrementa o timer em 1 a cada frame
+			// Não necessariamente o player está no modo de pulo quando ele aperta o botão de pulo,
+			// Então apenas guardamos o pulo no buffer
+			// Se o botão de pulo for pressionado, inicia o buffer timer do pulo
+			if (jump_press) {
+				jump_buffer_timer = jump_buffer_time;
+				current_state = states.jump;
+			}
+		
+			// Se o buffer timer não chegar a zero ...
+			if (jump_buffer_timer > 0) {
+				jump_buffered = true; // ... ativa o buffer (pulo guardado)
+				jump_buffer_timer--; // ... e decrementa o timer em 1 a cada frame
+			} else {
+				jump_buffered = false; // Quando o contador chegar a zero descarta o pulo guardado
+			}
+			
+		#endregion
+		
+		// Verificando se o jogador pode se mover
+		if (can_move == true) {
+			// Multiplicando a velocidade horizontal com o input e a velocidade maxima
+			hspd = lerp(hspd, horizontal_input * max_hspd, acceleration);
 		} else {
-			jump_buffered = false; // Quando o contador chegar a zero descarta o pulo guardado
+			hspd = 0; // Zerando a velociade instantaneamente
 		}
 		
-		// Chamando o script de movimento padrão de entidades
-		var _return = entity_movement(hspd, vspd);
+		// Chamando o script de colisão padrão de entidades
+		var _return = entity_collision(hspd, vspd);
 		
-		hspd = _return.hspd;
+		// Retornando os valores pós colisão
+		hspd = _return.hspd
 		vspd = _return.vspd;
 		on_ground = _return.on_ground;
 		
-		// Se estiver no chão...
-		if (on_ground == true) {
-			jump_count = 0; // ... reseta a quantidade de pulos performados
-			jump_hold_timer = 0; // ... reseta o timer de tempo que o jogador esta segurando o pulo
-			coyote_timer = coyote_window // .. reseta o coyote time
-		} else {
-			// Coyote time: permite que o player possa pular alguns frames apos sair do chao
-			if (coyote_timer > 0) {
-				coyote_timer--;
-			} else { 
-				// Garantindo que se o player estiver no ar, jump_count seja pelo menos 1
-				jump_count = max(jump_count, 1); 
+		#region Se estiver no chão...
+			if (on_ground == true) {
+				jump_count = 0; // ... reseta a quantidade de pulos performados
+				jump_hold_timer = 0; // ... reseta o timer de tempo que o jogador esta segurando o pulo
+				coyote_timer = coyote_window // .. reseta o coyote time
+			} else {
+				// Coyote time: permite que o player possa pular alguns frames apos sair do chao
+				if (coyote_timer > 0) {
+					coyote_timer--;
+				} else { 
+					// Garantindo que se o player estiver no ar, jump_count seja pelo menos 1
+					jump_count = max(jump_count, 1); 
+				}
 			}
-		}
-		
+		#endregion
+	}
+
+	// Metodo pra cancelar a velocidade horizontal
+	cancel_horizontal_speed = function() {
+		hspd = 0;
+		//return true;  // Retorna true para indicar que cancelou
 	}
 	
+	// Metodo pra cancelar o input horizontal
+	cancel_horizontal_input = function() {
+		horizontal_input = 0;
+		//return true;  // Retorna true para indicar que cancelou
+	}
+
 	// Metodo pra trocar o sprite do player
 	change_sprite = function(_sprite = spr_player_idle_old) {
 		if (sprite_index != _sprite) {
@@ -94,9 +124,13 @@
 			image_index = 0;
 		}
 		
-		if (hspd != 0) {
-			image_xscale = horizontal_input;
+		static facing_direction = 1;
+		
+		if (horizontal_input != 0) {
+			facing_direction = horizontal_input;
 		}
+		
+		image_xscale = facing_direction;
 	}
 	
 	// Metodo pra checar se a animação do player chegou ao fim
@@ -119,6 +153,7 @@
 		
 		states.idle = function(){
 			state_name = "idle"; // Nome do estado, usado em debug
+			can_move = true;
 			movimento(); // Chamando o metodo padrão de movimento
 			change_sprite(spr_player_idle); // Chamando metodo pra trocar o sprite do player
 			
@@ -128,13 +163,17 @@
 			if (vspd != 0) {
 				current_state = states.jump;
 			}
-			if (down && hspd == 0) {
+			if (up && hspd == 0) {
+				current_state = states.look_up;
+			}
+			if (down) {
 				current_state = states.crounch;
 			}
 		};
 		
 		states.move = function(){
 			state_name = "move"; // Nome do estado, usado em debug
+			can_move = true;
 			movimento(); // Chamando o metodo padrão de movimento
 			change_sprite(spr_player_move); // Chamando metodo pra trocar o sprite do player
 			
@@ -154,16 +193,31 @@
 		
 		states.crounch = function(){
 			state_name = "crounch"; // Nome do estado, usado em debug
+			can_move = false;
 			movimento(); // Chamando o metodo padrão de movimento
+			
+			
 			change_sprite(spr_player_crounch); // Chamando metodo pra trocar o sprite do player
 			
-			if (hspd != 0 || vspd != 0 || !down) {
+			if (!down) {
+				current_state = states.idle;
+			}
+		};
+
+		states.look_up = function(){
+			state_name = "look_up"; // Nome do estado, usado em debug
+			can_move = true;
+			movimento(); // Chamando o metodo padrão de movimento
+			change_sprite(spr_player_idle_old); // Chamando metodo pra trocar o sprite do player
+			
+			if (hspd != 0 || vspd != 0 || !up) {
 				current_state = states.idle;
 			}
 		};
 		
 		states.jump = function(){
 			state_name = "jump"; // Nome do estado, usado em debug
+			can_move = true;
 			movimento(); // Chamando o metodo padrão de movimento
 			change_sprite(spr_player_jump); // Chamando metodo pra trocar o sprite do player
 			
@@ -215,6 +269,7 @@
 		
 		states.fall = function(){
 			state_name = "fall"; // Nome do estado, usado em debug
+			can_move = true;
 			movimento(); // Chamando o metodo padrão de movimento
 			change_sprite(spr_player_fall); // Chamando metodo pra trocar o sprite do player
 			
@@ -227,11 +282,13 @@
 		states.attack = function() {
 			// Esse estado serve para quando o player conseguir um power up
 			state_name = "attack"; // Nome do estado, usado em debug
+			can_move = false;
 			movimento();
+			cancel_horizontal_input();
 			change_sprite(spr_player_attack); // Chamando metodo pra trocar o sprite do player
 			
 			// Trocando para o estado de parado quando a animação de ataque acabar
-			if (animation_end()) {
+			if (animation_end() || !on_ground) {
 				current_state = states.idle;
 			}
 		}
@@ -239,6 +296,7 @@
 		states.powerup_get = function() {
 			// Esse estado serve para quando o player conseguir um power up
 			state_name = "powerup_get"; // Nome do estado, usado em debug
+			can_move = false;
 			change_sprite(spr_player_powerup); // Chamando metodo pra trocar o sprite do player
 			
 			// Trocando do estado inicial de power up para o powerup wait
@@ -250,6 +308,7 @@
 		states.powerup_wait = function() {
 			// Aqui aparecerá um dialogo mostrando qual power up o player conseguiu
 			state_name = "powerup_wait"; // Nome do estado, usado em debug
+			can_move = false;
 			change_sprite(spr_player_powerup); // Chamando metodo pra trocar o sprite do player
 			
 			// Trocando do estado de power up para o powerup_wait
@@ -261,6 +320,7 @@
 		states.powerup_end = function() {
 			// Esse estado é chamado quando o player chegou ao final do dialogo do powerup
 			state_name = "powerup_end"; // Nome do estado, usado em debug
+			can_move = false;
 			change_sprite(spr_player_powerup); // Chamando metodo pra trocar o sprite do player
 			
 			// Trocando do estado de power up para o idle

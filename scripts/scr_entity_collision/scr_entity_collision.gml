@@ -1,4 +1,4 @@
-function entity_movement(horizontal_speed, vertical_speed, collidables = obj_collision, grav = GRAVITY){
+function entity_collision(horizontal_speed, vertical_speed, collidables = obj_collision, grav = GRAVITY){
 	// Aplicando a gravidade antes do movimento
 	vertical_speed += grav;
 	

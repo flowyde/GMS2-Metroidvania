@@ -27,7 +27,7 @@
     {"id":{"name":"obj_player","path":"objects/obj_player/obj_player.yy",},},
     {"id":{"name":"rm_0","path":"rooms/rm_0/rm_0.yy",},},
     {"id":{"name":"rm_init","path":"rooms/rm_init/rm_init.yy",},},
-    {"id":{"name":"scr_entity_movement","path":"scripts/scr_entity_movement/scr_entity_movement.yy",},},
+    {"id":{"name":"scr_entity_collision","path":"scripts/scr_entity_collision/scr_entity_collision.yy",},},
     {"id":{"name":"scr_general_functions","path":"scripts/scr_general_functions/scr_general_functions.yy",},},
     {"id":{"name":"scr_macros","path":"scripts/scr_macros/scr_macros.yy",},},
     {"id":{"name":"spr_bg","path":"sprites/spr_bg/spr_bg.yy",},},
