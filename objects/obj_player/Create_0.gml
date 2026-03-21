@@ -28,7 +28,7 @@
 		jump_window		= [18, 10]; 	// Tempo maximo (em frames) que o jogador pode pressionar o pulo 1 & 2
 		
 		// Coyote time
-		coyote_window = 20; // Tempo maximo (em frames) que o player pode ficar no ar e ainda conseguir perfomar um pulo
+		coyote_window = 8; // Tempo maximo (em frames) que o player pode ficar no ar e ainda conseguir perfomar um pulo
 		coyote_timer = coyote_window; // Tempo que falta pro player fazer o pulo estando no ar, famoso coyote time
 	
 	#endregion
@@ -199,8 +199,8 @@
 			
 			#region Transição de estados
 			
-				// Estado parado se a velocidade horizontal e vertical é 0
-				if (hspd == 0) && (vspd == 0) {
+				// Estado parado se encostou no chao
+				if (on_ground) {
 					current_state = states.idle;
 				}
 			
@@ -216,7 +216,7 @@
 			movimento(); // Chamando o metodo padrão de movimento
 			change_sprite(spr_player_fall); // Chamando metodo pra trocar o sprite do player
 			
-			if (vspd == 0) {
+			if (on_ground) {
 				current_state = states.idle;
 			}
 		};
