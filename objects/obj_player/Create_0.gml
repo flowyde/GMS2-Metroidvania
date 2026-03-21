@@ -105,18 +105,6 @@
 		#endregion
 	}
 
-	// Metodo pra cancelar a velocidade horizontal
-	cancel_horizontal_speed = function() {
-		hspd = 0;
-		//return true;  // Retorna true para indicar que cancelou
-	}
-	
-	// Metodo pra cancelar o input horizontal
-	cancel_horizontal_input = function() {
-		horizontal_input = 0;
-		//return true;  // Retorna true para indicar que cancelou
-	}
-
 	// Metodo pra trocar o sprite do player
 	change_sprite = function(_sprite = spr_player_idle_old) {
 		if (sprite_index != _sprite) {
