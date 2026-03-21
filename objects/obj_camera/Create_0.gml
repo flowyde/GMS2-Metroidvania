@@ -1,6 +1,4 @@
 camera = view_camera[0];
-view_width_half = camera_get_view_width(camera) / 2;
-view_height_half = camera_get_view_height(camera) / 2;
 
 target = obj_player;
 target_x = xstart;

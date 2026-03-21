@@ -42,6 +42,8 @@
 		// Chamando o script de controles
 		controles();
 		
+		if (attack) current_state = states.attack;
+		
 		// Multiplicando a velocidade horizontal com o input e a velocidade maxima
 	    hspd = lerp(hspd, horizontal_input * max_hspd, acceleration);
 		
@@ -216,11 +218,24 @@
 			movimento(); // Chamando o metodo padrão de movimento
 			change_sprite(spr_player_fall); // Chamando metodo pra trocar o sprite do player
 			
+			// Estado de parado quando pisar no chão
 			if (on_ground) {
 				current_state = states.idle;
 			}
 		};
 		
+		states.attack = function() {
+			// Esse estado serve para quando o player conseguir um power up
+			state_name = "attack"; // Nome do estado, usado em debug
+			movimento();
+			change_sprite(spr_player_attack); // Chamando metodo pra trocar o sprite do player
+			
+			// Trocando para o estado de parado quando a animação de ataque acabar
+			if (animation_end()) {
+				current_state = states.idle;
+			}
+		}
+
 		states.powerup_get = function() {
 			// Esse estado serve para quando o player conseguir um power up
 			state_name = "powerup_get"; // Nome do estado, usado em debug
