@@ -30,6 +30,7 @@
     {"id":{"name":"scr_entity_collision","path":"scripts/scr_entity_collision/scr_entity_collision.yy",},},
     {"id":{"name":"scr_general_functions","path":"scripts/scr_general_functions/scr_general_functions.yy",},},
     {"id":{"name":"scr_macros","path":"scripts/scr_macros/scr_macros.yy",},},
+    {"id":{"name":"scr_state_machine","path":"scripts/scr_state_machine/scr_state_machine.yy",},},
     {"id":{"name":"spr_bg","path":"sprites/spr_bg/spr_bg.yy",},},
     {"id":{"name":"spr_collision","path":"sprites/spr_collision/spr_collision.yy",},},
     {"id":{"name":"spr_player_attack","path":"sprites/spr_player_attack/spr_player_attack.yy",},},

@@ -135,7 +135,8 @@
 		
 		states = {};
 		state_name = "";
-		current_state = noone;
+		current_state = undefined;
+		previous_state = undefined;
 		
 		dbg_text(ref_create(self, "state_name"));
 		
