@@ -272,7 +272,6 @@
 			state_name = "attack"; // Nome do estado, usado em debug
 			can_move = false;
 			movimento();
-			cancel_horizontal_input();
 			change_sprite(spr_player_attack); // Chamando metodo pra trocar o sprite do player
 			
 			// Trocando para o estado de parado quando a animação de ataque acabar
