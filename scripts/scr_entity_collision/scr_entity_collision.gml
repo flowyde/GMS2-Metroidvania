@@ -1,3 +1,4 @@
+/// @description Função que retorna valores de colisão vertical e horizontal de uma entidade
 function entity_collision(horizontal_speed, vertical_speed, collidables = obj_collision, grav = GRAVITY){
 	// Aplicando a gravidade antes do movimento
 	vertical_speed += grav;
