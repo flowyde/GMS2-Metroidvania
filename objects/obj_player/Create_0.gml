@@ -8,15 +8,18 @@
 	max_hspd = 2;
 	vspd = 0;
 	max_vspd = 4;
-	
-#region Boleanas genericas
-	on_ground = true; // Pra checar se o player está no chão
-	can_move = true; // Pra checar se o player pode se mover
-	can_turn = true; // Pra checar se o xscale pode ser alterado
-	can_jump = true; // Pra checar se o player pode pular
-	can_attack = true; // Pra checar se o jogador pode atacar
 
-#endregion 
+	facing_direction = 1; // Armazena a direção em que o jogador está olhando
+	
+	#region Boleanas genericas
+		on_ground = true; // Pra checar se o player está no chão
+		can_move = true; // Pra checar se o player pode se mover
+		can_turn = true; // Pra checar se o xscale pode ser alterado
+		can_jump = true; // Pra checar se o player pode pular
+		can_attack = true; // Pra checar se o jogador pode atacar
+		can_dash = true; // Pra checar se o jogador pode performar um dash
+	
+	#endregion 
 
 	#region Pulo
 		
@@ -32,14 +35,27 @@
 		// Valores pra cada Pulo bem sucedido
 		max_jump_force	= [-3.4, -2.6]; // Define o valor maximo da força do pulo 1 & 2
 		jump_window		= [18, 10]; 	// Tempo maximo (em frames) que o jogador pode pressionar o pulo 1 & 2
-		
-		jump_boost_window = 100;
 
 		// Coyote time
 		coyote_window = 8; // Tempo maximo (em frames) que o player pode ficar no ar e ainda conseguir perfomar um pulo
 		coyote_timer = coyote_window; // Tempo que falta pro player fazer o pulo estando no ar, famoso coyote time
 	
 	#endregion
+
+	#region Dash
+
+		max_dashes = 2; // Define a quantidade maxima de dashes que o jogador pode performar
+		dash_count = 0; // Contador pra quantos dashes o jogador ja deu
+		dash_speed = 6; // Define a velocidade em que o jogador vai do ponto original até a direção do dash
+		dash_hspd = 0; // Velocidade horizontal do dash
+		dash_vspd = 0; // Velocidade vertical do dash
+		dash_direction = 0; // Armazena a direção do dash
+		dash_duration = 15; // Duração do dash em frames
+		dash_timer = 0; // Timer que conta a duração
+		jump_boost_window = 100; // Tempo maximo em frames que o jogador pode apertar o botão de pulo enquanto faz um dash pra ganhar um boost
+
+	#endregion
+
 
 #endregion
 
@@ -51,6 +67,10 @@
 		controles();
 		
 		if (can_attack && attack) state_change(states.attack);
+			
+		if (dash_run_press && dash_count < max_dashes && can_dash) {
+		    state_change(states.dash);
+		}
 		
 		#region Logica de pulo
 		
@@ -76,9 +96,9 @@
 		if (can_move == true) {
 			// Multiplicando a velocidade horizontal com o input e a velocidade maxima
 			hspd = lerp(hspd, horizontal_input * max_hspd, acceleration);
-		} else {
+		}/* else {
 			hspd = 0; // Zerando a velociade instantaneamente
-		}
+		}*/
 		
 		// Chamando o script de colisão padrão de entidades
 		var _return = entity_collision(hspd, vspd);
@@ -93,6 +113,8 @@
 				jump_count = 0; // ... reseta a quantidade de pulos performados
 				jump_hold_timer = 0; // ... reseta o timer de tempo que o jogador esta segurando o pulo
 				coyote_timer = coyote_window // .. reseta o coyote time
+				dash_count = 0; // ... reseta a quantidade de dashes performados
+				// can_dash = true
 			} else {
 				// Coyote time: permite que o player possa pular alguns frames apos sair do chao
 				if (coyote_timer > 0) {
@@ -111,8 +133,6 @@
 			sprite_index = _sprite;
 			image_index = 0;
 		}
-		
-		static facing_direction = 1;
 		
 		if (can_turn == true && horizontal_input != 0) {
 			facing_direction = horizontal_input;
@@ -145,6 +165,7 @@
 		states.fall 		= create_state("fall", STATE_PRIORITY.LOW);
 		states.crounch		= create_state("crounch", STATE_PRIORITY.LOW);
 		states.look_up 		= create_state("look_up", STATE_PRIORITY.LOW);
+		states.dash 		= create_state("dash", STATE_PRIORITY.LOW);
 		states.attack 		= create_state("attack", STATE_PRIORITY.MEDIUM);
 		//states.powerup_get 	= create_state("powerup_get", STATE_PRIORITY.HIGH);
 		//states.powerup_wait = create_state("powerup_wait", STATE_PRIORITY.HIGH);
@@ -188,46 +209,6 @@
 			states.move.leave = method(self, function() {});
 		#endregion
 
-		#region Crounch
-			states.crounch.init = method(self, function () {
-				can_move = false;
-			});
-
-			states.crounch.run = method(self, function () {
-				movimento(); // Chamando o metodo padrão de movimento
-				change_sprite(spr_player_crounch); // Chamando metodo pra trocar o sprite do player
-				
-				
-				if (jump) {
-					state_change(states.jump);
-					return;
-				}
-				if (!down) {
-					state_change(states.idle);
-					return;
-				}
-			});
-
-			states.crounch.leave = method(self, function () {});
-		#endregion
-
-		#region Looking Up
-			states.look_up.init = method(self, function () {
-				can_move = true;
-			});
-
-			states.look_up.run = method(self, function () {
-				movimento(); // Chamando o metodo padrão de movimento
-				change_sprite(spr_player_idle_old); // Chamando metodo pra trocar o sprite do player
-				
-				if (hspd != 0 || vspd != 0 || !up) {
-					state_change(states.idle);
-				}
-			});
-
-			states.look_up.leave = method(self, function () {});
-		#endregion
-		
 		#region Jumping
 			states.jump.init = method(self, function () {
 				can_move = true;
@@ -304,7 +285,119 @@
 
 			states.fall.leave = method(self, function () {});
 		#endregion
+
+		#region Crounch
+			states.crounch.init = method(self, function () {
+				can_move = false;
+				hspd = 0;
+				vspd = 0;
+			});
+
+			states.crounch.run = method(self, function () {
+				movimento(); // Chamando o metodo padrão de movimento
+				change_sprite(spr_player_crounch); // Chamando metodo pra trocar o sprite do player
+				
+				if (jump) {
+					state_change(states.jump);
+					return;
+				}
+				if (!down) {
+					state_change(states.idle);
+					return;
+				}
+			});
+
+			states.crounch.leave = method(self, function () {});
+		#endregion
+
+		#region Looking Up
+			states.look_up.init = method(self, function () {
+				can_move = true;
+				can_turn = true;
+				can_jump = true;
+			});
+
+			states.look_up.run = method(self, function () {
+				movimento(); // Chamando o metodo padrão de movimento
+				change_sprite(spr_player_powerup); // Chamando metodo pra trocar o sprite do player
+				
+				if !on_ground || vspd != 0 {
+					state_change(states.jump);
+				}
+				
+				if (hspd != 0 || !up) {
+					state_change(states.idle);
+				}
+			});
+
+			states.look_up.leave = method(self, function () {});
+		#endregion
 		
+		#region Dashing
+
+			states.dash.init = method(self, function () {
+				can_turn = false;
+				can_move = false;
+				
+				// Checa se existe algum input do jogador para determinar a direção do dash
+				// Se não, utiliza a direção em que o personagem está olhando
+				if (horizontal_input != 0 || vertical_input != 0)
+					dash_direction = point_direction(0, 0, horizontal_input, vertical_input);
+				else
+					dash_direction = (facing_direction > 0) ? 0 : 180;
+				
+				// Definindo as velocidades horizontal e vertical do dash
+				dash_hspd = lengthdir_x(dash_speed, dash_direction);
+				dash_vspd = lengthdir_y(-dash_speed, dash_direction);
+				
+				// Inicia o timer do dash
+				states.dash.timer = dash_duration;
+				
+				// Incrementando a quantidade de dashes performados
+				dash_count++;
+				
+				// Efeito de screen shake
+				obj_camera.screen_shake(5, dash_duration);
+			})
+
+			states.dash.run = method(self, function () {
+				
+				// Utilizando os valores horizontal e vertical do dash para colisao
+				var _return = entity_collision(dash_hspd, dash_vspd,, 0);
+				
+				hspd = _return.hspd;
+				vspd = _return.vspd;
+				on_ground = _return.on_ground;
+				
+				change_sprite(spr_player_jump);
+				
+				// Decrementando o timer de dash
+				states.dash.timer--;
+				
+		        // Termina o dash quando o timer chega a 0
+		        if (states.dash.timer <= 0) {
+		            state_change(states.idle);
+		            return;
+		        }
+		        
+		        // Sair do dash mais cedo se colidir
+		        if (hspd == 0 && vspd == 0) {
+		            state_change(states.idle);
+		            return;
+		        }
+			})
+
+			states.dash.leave = method(self, function () {
+				can_turn = true;
+				can_move = true;
+
+				// Zerando as velocidades de dash
+				dash_hspd = 0;
+				dash_vspd = 0;
+			})
+		
+		#endregion
+
 		#region Attacking
 			states.attack.init = method(self, function () {
 				can_move = false;

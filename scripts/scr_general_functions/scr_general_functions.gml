@@ -19,6 +19,7 @@ function controles() {
 		
 		attack = keyboard_check(ord("X"));
 		dash_run = keyboard_check(ord("C"));
+		dash_run_press = keyboard_check_pressed(ord("C"));
 		taunt = keyboard_check(ord("V"));
 		
 		heal = keyboard_check(ord("A"));

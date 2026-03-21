@@ -22,7 +22,7 @@ x += random_range(-shake_value,shake_value);
 y += random_range(-shake_value,shake_value);
 
 // Gradualmente decrementando o shake_value
-shake_value = max(0, shake_value - ((1/shake_len) * shake_str));
+shake_value = max(0, shake_value - (shake_str / shake_len));
 
 // Mantendo a camera no centro da tela
 // Utilizando floor pra evitar numeros quebrados
