@@ -9,14 +9,14 @@
 	vspd = 0;
 	max_vspd = 4;
 	
-	// Pra checar se o player está no chão
-	on_ground = true;
+#region Boleanas genericas
+	on_ground = true; // Pra checar se o player está no chão
+	can_move = true; // Pra checar se o player pode se mover
+	can_turn = true; // Pra checar se o xscale pode ser alterado
+	can_jump = true; // Pra checar se o player pode pular
+	can_attack = true; // Pra checar se o jogador pode atacar
 
-	// Pra checar se o player pode se mover
-	can_move = true;
-
-	// Pra checar se o player pode pular
-	can_jump = true;
+#endregion 
 
 	#region Pulo
 		
@@ -50,14 +50,14 @@
 		// Chamando o script de controles
 		controles();
 		
-		if (attack) state_change(states.attack);
+		if (can_attack && attack) state_change(states.attack);
 		
 		#region Logica de pulo
 		
 			// Não necessariamente o player está no modo de pulo quando ele aperta o botão de pulo,
 			// Então apenas guardamos o pulo no buffer
 			// Se o botão de pulo for pressionado, inicia o buffer timer do pulo
-			if (jump_press) {
+			if (can_jump && jump_press) {
 				jump_buffer_timer = jump_buffer_time;
 				state_change(states.jump);
 			}
@@ -114,7 +114,7 @@
 		
 		static facing_direction = 1;
 		
-		if (horizontal_input != 0) {
+		if (can_turn == true && horizontal_input != 0) {
 			facing_direction = horizontal_input;
 		}
 		
@@ -166,7 +166,7 @@
 			});
 			
 			states.idle.leave = method(self, function() {
-				show_debug_message("iedle");
+				//show_debug_message("iedle");
 				return;
 			});
 		#endregion
@@ -308,14 +308,24 @@
 		#region Attacking
 			states.attack.init = method(self, function () {
 				can_move = false;
+				can_turn = false;
+				can_jump = false;
+				can_attack = false; // Evita do player atacar enquanto ataca
 			});
 
 			states.attack.run = method(self, function () {
 				movimento();
-				change_sprite(spr_player_attack); // Chamando metodo pra trocar o sprite do player
+				static _combo_sprites = [
+					spr_player_attack,
+					spr_player_double_attack,
+				];
+				static _combo_index = 0;
+				
+				change_sprite(_combo_sprites[_combo_index]); // Chamando metodo pra trocar o sprite do player
 				
 				// Trocando para o estado de parado quando a animação de ataque acabar
 				if (animation_end()) {
+					_combo_index = (_combo_index + 1) mod array_length(_combo_sprites);
 					state_change(states.idle);
 					return;
 				}
@@ -323,6 +333,9 @@
 
 			states.attack.leave = method(self, function () {
 				can_move = true;
+				can_turn = true;
+				can_attack = true;
+				can_jump = true;
 			});
 		#endregion
 
