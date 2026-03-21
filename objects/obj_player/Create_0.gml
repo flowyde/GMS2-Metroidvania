@@ -139,26 +139,28 @@
 		previous_state = undefined;
 		
 		dbg_text(ref_create(self, "state_name"));
-		
-		states.idle = function(){
-			state_name = "idle"; // Nome do estado, usado em debug
-			can_move = true;
-			movimento(); // Chamando o metodo padrão de movimento
-			change_sprite(spr_player_idle); // Chamando metodo pra trocar o sprite do player
+
+		states.idle = new State("idle");
+		states.idle = {
+			start : function() {
+				can_move = true;
+			},
 			
-			if (hspd != 0) {
-				current_state = states.move;
+			run: function () {
+				movimento(); // Chamando o metodo padrão de movimento
+				change_sprite(spr_player_idle); // Chamando metodo pra trocar o sprite do player
+				
+				if (hspd != 0) 			state_change(states.move);
+				if (vspd != 0) 			state_change(states.jump);
+				if (up && hspd == 0) 	state_change(states.look_up);
+				if (down) 				state_change(states.crounch);
+			},
+			
+			leave: function () {
+				
 			}
-			if (vspd != 0) {
-				current_state = states.jump;
-			}
-			if (up && hspd == 0) {
-				current_state = states.look_up;
-			}
-			if (down) {
-				current_state = states.crounch;
-			}
-		};
+			
+		}
 		
 		states.move = function(){
 			state_name = "move"; // Nome do estado, usado em debug
