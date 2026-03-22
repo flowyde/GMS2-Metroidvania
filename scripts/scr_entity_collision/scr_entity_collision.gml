@@ -8,6 +8,8 @@ function entity_collision(horizontal_speed, vertical_speed, collidables = obj_co
 	var _vspd		=	vertical_speed;
 	var _sign_h		=	sign(_hspd);
 	var _sign_v		=	sign(_vspd);
+	var _hspd_col	= 	false; // retorna se tem uma colisão na horizontal
+	var _vspd_col	= 	false; // retorna se tem uma colisão na vertical
 	static __sub_pixel 	=	0.5;
 	
 	#region Movimento Horizontal
@@ -22,6 +24,9 @@ function entity_collision(horizontal_speed, vertical_speed, collidables = obj_co
 			
 			// Se uma colisão for feita, então a velocidade horizontal é zero 
 			_hspd = 0;
+			_hspd_col = true;
+		} else {
+			_hspd_col = false;
 		}
 	
 		// Soma o valor X de acordo com a velocidade horizontal
@@ -47,6 +52,10 @@ function entity_collision(horizontal_speed, vertical_speed, collidables = obj_co
 			
 			// Se uma colisão for feita, então a velocidade vertical é zero
 			_vspd = 0;
+			_vspd_col = true;
+			
+		} else {
+			_vspd_col = false;
 		}
 	
 		// Define uma variavel que checa se a entidade está colidindo com o chão
@@ -67,6 +76,8 @@ function entity_collision(horizontal_speed, vertical_speed, collidables = obj_co
 	return {
 		hspd : _hspd,
 		vspd : _vspd,
+		hspd_col : _hspd_col,
+		vspd_col : _vspd_col,
 		on_ground : _on_ground
 	};
 }

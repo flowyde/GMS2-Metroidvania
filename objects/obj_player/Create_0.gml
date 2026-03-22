@@ -44,7 +44,7 @@
 
 	#region Dash
 
-		max_dashes = 2; // Define a quantidade maxima de dashes que o jogador pode performar
+		max_dashes = 1; // Define a quantidade maxima de dashes que o jogador pode performar
 		dash_count = 0; // Contador pra quantos dashes o jogador ja deu
 		dash_speed = 6; // Define a velocidade em que o jogador vai do ponto original até a direção do dash
 		dash_hspd = 0; // Velocidade horizontal do dash
@@ -114,7 +114,7 @@
 				jump_hold_timer = 0; // ... reseta o timer de tempo que o jogador esta segurando o pulo
 				coyote_timer = coyote_window // .. reseta o coyote time
 				dash_count = 0; // ... reseta a quantidade de dashes performados
-				// can_dash = true
+				can_dash = true
 			} else {
 				// Coyote time: permite que o player possa pular alguns frames apos sair do chao
 				if (coyote_timer > 0) {
@@ -358,6 +358,8 @@
 				
 				// Efeito de screen shake
 				obj_camera.screen_shake(5, dash_duration);
+				
+				image_blend = c_aqua;
 			})
 
 			states.dash.run = method(self, function () {
@@ -376,12 +378,18 @@
 				
 		        // Termina o dash quando o timer chega a 0
 		        if (states.dash.timer <= 0) {
+					if (!on_ground) {
+						state_change(states.fall);
+						return;
+					}
+					
+					// Fallback pra estado idle
 		            state_change(states.idle);
 		            return;
 		        }
 		        
 		        // Sair do dash mais cedo se colidir
-		        if (hspd == 0 && vspd == 0) {
+		        if (_return.hspd_col || _return.vspd_col) {
 		            state_change(states.idle);
 		            return;
 		        }
@@ -394,6 +402,8 @@
 				// Zerando as velocidades de dash
 				dash_hspd = 0;
 				dash_vspd = 0;
+				
+				image_blend = c_white;
 			})
 		
 		#endregion
@@ -404,6 +414,11 @@
 				can_turn = false;
 				can_jump = false;
 				can_attack = false; // Evita do player atacar enquanto ataca
+				
+				// Zerando a velocidade horizontal e vertical
+				// Evita de herdar velocidade de outros estados
+				hspd = 0;
+				vspd = 0;
 			});
 
 			states.attack.run = method(self, function () {
@@ -489,6 +504,6 @@
 
 // Estado padrão do player é o idle
 current_state = states.idle;
-state_init(states.idle)
+state_init(states.idle);
 
 
