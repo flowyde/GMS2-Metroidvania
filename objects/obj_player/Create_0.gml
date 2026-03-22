@@ -166,6 +166,7 @@
 		states.crounch		= create_state("crounch", STATE_PRIORITY.LOW);
 		states.look_up 		= create_state("look_up", STATE_PRIORITY.LOW);
 		states.dash 		= create_state("dash", STATE_PRIORITY.LOW);
+		states.inertia		= create_state("inertia", STATE_PRIORITY.MEDIUM);
 		states.attack 		= create_state("attack", STATE_PRIORITY.MEDIUM);
 		//states.powerup_get 	= create_state("powerup_get", STATE_PRIORITY.HIGH);
 		//states.powerup_wait = create_state("powerup_wait", STATE_PRIORITY.HIGH);
@@ -360,6 +361,9 @@
 				obj_camera.screen_shake(5, dash_duration);
 				
 				image_blend = c_aqua;
+				
+				if sign(dash_hspd) != 0
+					facing_direction = sign(dash_hspd)
 			})
 
 			states.dash.run = method(self, function () {
@@ -384,12 +388,17 @@
 					}
 					
 					// Fallback pra estado idle
-		            state_change(states.idle);
+		            state_change(states.fall);
 		            return;
 		        }
 		        
 		        // Sair do dash mais cedo se colidir
 		        if (_return.hspd_col || _return.vspd_col) {
+					if (!on_ground) {
+						state_change(states.fall);
+						return;
+					}
+					
 		            state_change(states.idle);
 		            return;
 		        }
@@ -403,8 +412,26 @@
 				dash_hspd = 0;
 				dash_vspd = 0;
 				
+				// vspd = 0;
+				
 				image_blend = c_white;
 			})
+		
+		#endregion
+
+		#region Inertia
+
+			states.inertia.init = method(self, function () {
+				
+			});
+	
+			states.inertia.run = method(self, function () {
+				
+			});
+	
+			states.inertia.leave = method(self, function () {
+				
+			});
 		
 		#endregion
 
@@ -414,14 +441,14 @@
 				can_turn = false;
 				can_jump = false;
 				can_attack = false; // Evita do player atacar enquanto ataca
-				
-				// Zerando a velocidade horizontal e vertical
-				// Evita de herdar velocidade de outros estados
-				hspd = 0;
-				vspd = 0;
 			});
 
 			states.attack.run = method(self, function () {
+				// Zerando a velocidade horizontal e vertical
+				// Evita de herdar velocidade de outros estados
+				hspd = lerp(hspd, 0, 0.25);
+				vspd = lerp(vspd, 0, 0.25);
+				
 				movimento();
 				static _combo_sprites = [
 					spr_player_attack,
