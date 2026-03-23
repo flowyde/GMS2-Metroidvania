@@ -17,7 +17,7 @@ function controles() {
 		jump = keyboard_check(ord("Z"));
 		jump_press = keyboard_check_pressed(ord("Z"));
 		
-		attack = keyboard_check(ord("X"));
+		attack = keyboard_check_pressed(ord("X"));
 		dash_run = keyboard_check(ord("C"));
 		dash_run_press = keyboard_check_pressed(ord("C"));
 		taunt = keyboard_check(ord("V"));

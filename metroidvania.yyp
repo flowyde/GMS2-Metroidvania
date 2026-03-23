@@ -41,6 +41,7 @@
     {"id":{"name":"spr_player_idle","path":"sprites/spr_player_idle/spr_player_idle.yy",},},
     {"id":{"name":"spr_player_jump","path":"sprites/spr_player_jump/spr_player_jump.yy",},},
     {"id":{"name":"spr_player_move","path":"sprites/spr_player_move/spr_player_move.yy",},},
+    {"id":{"name":"spr_player_pogo","path":"sprites/spr_player_pogo/spr_player_pogo.yy",},},
     {"id":{"name":"spr_player_powerup","path":"sprites/spr_player_powerup/spr_player_powerup.yy",},},
   ],
   "resourceType":"GMProject",

@@ -2,6 +2,7 @@ draw_text(10, 10, "jump_count: " + string(jump_count));
 draw_text(10, 30, "on_ground: " + string(on_ground));
 draw_text(10, 50, "jump_buffered: " + string(jump_buffered));
 draw_text(10, 70, "current state: " + string(current_state.name));
+// show_debug_message(current_state.name);
 draw_text(10, 90, "dash counter: " + string(dash_count));
 draw_text(10, 110, "Can dash: " + string(can_dash));
 draw_text(10, 130, "Facing direction: " + string(facing_direction));

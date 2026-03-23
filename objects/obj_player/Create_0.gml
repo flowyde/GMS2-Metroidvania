@@ -23,11 +23,7 @@
 
 	#region Pulo
 		
-		jump_buffer_time = 3; // Janela de frames em que o pulo fica "Guardado"
-		jump_buffered = false; // Indica se ha um pulo esperando a ser executado
-		jump_buffer_timer = 0; // Contador regressivo do buffer (0 = sem buffer ativo)
-
-		max_jumps = 2; // Define a quantidade maxima de pulos que o jogador pode performar
+		max_jumps = 1; // Define a quantidade maxima de pulos que o jogador pode performar
 		jump_count = 0; // Contador pra quantos pulos o jogador ja deu
 		jump_hold_timer = 0; // Timer pra quantidade de tempo que o jogador pressionou pulo
 		jump_force = 0; // Força do pulo
@@ -37,8 +33,17 @@
 		jump_window		= [18, 10]; 	// Tempo maximo (em frames) que o jogador pode pressionar o pulo 1 & 2
 
 		// Coyote time
-		coyote_window = 8; // Tempo maximo (em frames) que o player pode ficar no ar e ainda conseguir perfomar um pulo
+		coyote_window = 6; // Tempo maximo (em frames) que o player pode ficar no ar e ainda conseguir perfomar um pulo
 		coyote_timer = coyote_window; // Tempo que falta pro player fazer o pulo estando no ar, famoso coyote time
+
+		// Jump buffer
+		jump_buffer_window = 10; // Janela de frames em que o pulo fica "Guardado"
+		jump_buffer_timer = 0; // Contador regressivo do buffer (0 = sem buffer ativo)
+		jump_buffered = false; // Indica se ha um pulo esperando a ser executado
+	
+	#endregion
+
+	#region Pogo
 	
 	#endregion
 
@@ -52,7 +57,11 @@
 		dash_direction = 0; // Armazena a direção do dash
 		dash_duration = 15; // Duração do dash em frames
 		dash_timer = 0; // Timer que conta a duração
-		jump_boost_window = 100; // Tempo maximo em frames que o jogador pode apertar o botão de pulo enquanto faz um dash pra ganhar um boost
+		
+		#region Inertia
+			inertia_window = 100; // Tempo maximo em frames que o jogador pode apertar o botão de pulo enquanto faz um dash pra ganhar um boost
+			
+		#endregion		
 
 	#endregion
 
@@ -66,31 +75,14 @@
 		// Chamando o script de controles
 		controles();
 		
-		if (can_attack && attack) state_change(states.attack);
-			
+		// Verificando se o jogador pode performar um dash
 		if (dash_run_press && dash_count < max_dashes && can_dash) {
 		    state_change(states.dash);
 		}
 		
-		#region Logica de pulo
-		
-			// Não necessariamente o player está no modo de pulo quando ele aperta o botão de pulo,
-			// Então apenas guardamos o pulo no buffer
-			// Se o botão de pulo for pressionado, inicia o buffer timer do pulo
-			if (can_jump && jump_press) {
-				jump_buffer_timer = jump_buffer_time;
-				state_change(states.jump);
-			}
-		
-			// Se o buffer timer não chegar a zero ...
-			if (jump_buffer_timer > 0) {
-				jump_buffered = true; // ... ativa o buffer (pulo guardado)
-				jump_buffer_timer--; // ... e decrementa o timer em 1 a cada frame
-			} else {
-				jump_buffered = false; // Quando o contador chegar a zero descarta o pulo guardado
-			}
-			
-		#endregion
+		if (can_attack && attack) {
+			state_change(states.attack);
+		}
 		
 		// Verificando se o jogador pode se mover
 		if (can_move == true) {
@@ -108,23 +100,36 @@
 		vspd = _return.vspd;
 		on_ground = _return.on_ground;
 		
-		#region Se estiver no chão...
-			if (on_ground == true) {
-				jump_count = 0; // ... reseta a quantidade de pulos performados
-				jump_hold_timer = 0; // ... reseta o timer de tempo que o jogador esta segurando o pulo
-				coyote_timer = coyote_window // .. reseta o coyote time
-				dash_count = 0; // ... reseta a quantidade de dashes performados
-				can_dash = true
-			} else {
-				// Coyote time: permite que o player possa pular alguns frames apos sair do chao
-				if (coyote_timer > 0) {
-					coyote_timer--;
-				} else { 
-					// Garantindo que se o player estiver no ar, jump_count seja pelo menos 1
-					jump_count = max(jump_count, 1); 
-				}
+		// Se pode pular e o botão de pulo for pressionado, inicia o buffer timer do pulo
+		if (can_jump && jump_press) {
+			jump_buffer_timer = jump_buffer_window;
+			state_change(states.jump); // 
+		}
+		
+		// Se o buffer timer de pulo não chegar a zero ...
+		if (jump_buffer_timer > 0) {
+			jump_buffered = true; // ... ativa o buffer (pulo guardado)
+			jump_buffer_timer--; // ... e decrementa o timer em 1 a cada frame
+		} else {
+			jump_buffered = false; // Quando o contador chegar a zero descarta o pulo guardado
+		}
+		
+		// Se estiver no chão...
+		if (on_ground == true) {
+			jump_count = 0; // ... reseta a quantidade de pulos performados
+			jump_hold_timer = 0; // ... reseta o timer de tempo que o jogador esta segurando o pulo
+			coyote_timer = coyote_window // .. reseta o coyote time
+			dash_count = 0; // ... reseta a quantidade de dashes performados
+			can_dash = true;
+		} else {
+			// Coyote time: permite que o player possa pular alguns frames apos sair do chao
+			if (coyote_timer > 0) {
+				coyote_timer--;
+			} else { 
+				// Garantindo que se o player estiver no ar, jump_count seja pelo menos 1
+				jump_count = max(jump_count, 1); 
 			}
-		#endregion
+		}
 	}
 
 	// Metodo pra trocar o sprite do player
@@ -165,6 +170,7 @@
 		states.fall 		= create_state("fall", STATE_PRIORITY.LOW);
 		states.crounch		= create_state("crounch", STATE_PRIORITY.LOW);
 		states.look_up 		= create_state("look_up", STATE_PRIORITY.LOW);
+		states.pogo			= create_state("pogo", STATE_PRIORITY.HIGH);
 		states.dash 		= create_state("dash", STATE_PRIORITY.LOW);
 		states.inertia		= create_state("inertia", STATE_PRIORITY.MEDIUM);
 		states.attack 		= create_state("attack", STATE_PRIORITY.MEDIUM);
@@ -181,10 +187,11 @@
 				movimento(); // Chamando o metodo padrão de movimento
 				change_sprite(spr_player_idle); // Chamando metodo pra trocar o sprite do player
 				
-				if (hspd != 0) 			state_change(states.move);
-				if (vspd != 0) 			state_change(states.jump);
-				if (up && hspd == 0) 	state_change(states.look_up);
-				if (down) 				state_change(states.crounch);
+				if (hspd != 0) 			{state_change(states.move); return;}
+				if (vspd < 0) 			{state_change(states.jump); return;}
+				if (vspd > 0) 			{state_change(states.fall); return;}
+				if (up && hspd == 0) 	{state_change(states.look_up); return;}
+				if (down) 				{state_change(states.crounch); return;}
 			});
 			
 			states.idle.leave = method(self, function() {
@@ -202,8 +209,9 @@
 				movimento(); // Chamando o metodo padrão de movimento
 				change_sprite(spr_player_move); // Chamando metodo pra trocar o sprite do player
 				
+				if (vspd < 0) 	{state_change(states.jump); return;}
+				if (vspd > 0) 	{state_change(states.fall); return;}
 				if (hspd == 0) 	{state_change(states.idle); return;} // Estado parado se velocidade horizontal é 0
-				if (vspd != 0) 	{state_change(states.jump); return;} // Estado de pulo se velocidade vertical é diferente de 0
 				if (down) 		{state_change(states.crounch); return;}
 			});
 				
@@ -220,8 +228,9 @@
 				change_sprite(spr_player_jump); // Chamando metodo pra trocar o sprite do player
 				
 				// Verificando se pode performar um pulo
-				// Inicia o pulo se tiver um pulo no buffer e a quantidade de pulos performados for menor ao maximo de pulos permitidos
-				if (jump_buffered && (jump_count < max_jumps)) {
+				// Inicia o pulo nos seguintes casos:
+				// Existe um pulo no buffer e a quantidade de pulos performados for menor ao maximo de pulos permitidos
+				if ((coyote_timer > 0) || (jump_buffered && (jump_count < max_jumps))) {
 					jump_count++; // Incrementando a quantidade de pulos performados
 					
 					// Variavel pra armazenar o indice do pulo
@@ -247,20 +256,27 @@
 					
 					vspd = max_jump_force[_jump_index]; // Aplica a força de pulo na velocidade horizontal
 					jump_hold_timer--; // Decrementando o timer
-				} else {
+				} else if (!jump){
 					jump_hold_timer = 0; // Parando o timer se o jogador parar de pressionar o botão de pulo
 				}
 				
 				#region Transição de estados
 				
-					// Estado parado se encostou no chao
-					if (on_ground) {
-						state_change(states.idle);
+					if (attack && down && !on_ground) {
+					    state_change(states.pogo);
+						return;
 					}
 				
 					// Estado caindo se a velocidade veritical for maior que 0	
 					if (vspd > 0) {
 						state_change(states.fall);
+						return;
+					}
+				
+					// Estado parado se encostou no chao
+					if (on_ground) {
+						state_change(states.idle);
+						return;
 					}
 				#endregion
 			});
@@ -277,8 +293,24 @@
 				movimento(); // Chamando o metodo padrão de movimento
 				change_sprite(spr_player_fall); // Chamando metodo pra trocar o sprite do player
 				
-				// Estado de parado quando pisar no chão
+				// Checando se o jogador apertou o botão de pulo enquanto ainda pode
+				// Coyote time
+				if ((coyote_timer > 0) && jump_press) {
+					state_change(states.jump);
+					return;
+				}
+				
+				if (attack && down && !on_ground) {
+					state_change(states.pogo);
+					return;
+				}
+				
+				// Checando se ja chegou ao chão
 				if (on_ground) {
+					//Estado de movendo se a velocidade horizontal for diferente de zero
+					if (hspd != 0) {state_change(states.move); return;}
+					
+					// Fallback pra estado parado
 					state_change(states.idle);
 					return;
 				}
@@ -298,10 +330,6 @@
 				movimento(); // Chamando o metodo padrão de movimento
 				change_sprite(spr_player_crounch); // Chamando metodo pra trocar o sprite do player
 				
-				if (jump) {
-					state_change(states.jump);
-					return;
-				}
 				if (!down) {
 					state_change(states.idle);
 					return;
@@ -322,9 +350,9 @@
 				movimento(); // Chamando o metodo padrão de movimento
 				change_sprite(spr_player_powerup); // Chamando metodo pra trocar o sprite do player
 				
-				if !on_ground || vspd != 0 {
-					state_change(states.jump);
-				}
+				//if !on_ground || vspd != 0 {
+					//state_change(states.jump);
+				//}
 				
 				if (hspd != 0 || !up) {
 					state_change(states.idle);
@@ -333,7 +361,79 @@
 
 			states.look_up.leave = method(self, function () {});
 		#endregion
-		
+				
+		#region Pogo
+
+			states.pogo.init = method(self, function () {
+				can_move = false;
+				can_attack = false;
+				can_jump = false;
+				can_turn = false;
+				
+				pogo_direction = point_direction(0, 0, facing_direction, -1);
+				
+				var _pogo_force = abs(max_jump_force[0]) * 1.2; // Força do avanço
+				
+				// Aplicar força diagonal
+				hspd = lengthdir_x(_pogo_force, pogo_direction);
+				vspd = -lengthdir_y(_pogo_force, pogo_direction); // += para somar com o pulo
+				
+				image_blend = c_yellow;
+				
+				pogo_done = false;
+				pogo_jump_done = false;
+				pogo_dash_done = false;
+				pogo_duration = 16;
+			});
+
+			states.pogo.run = method(self, function () {
+				controles();
+				change_sprite(spr_player_pogo); // Placeholder
+				
+				// Incrementando o timer do pogo
+				states.pogo.timer++;
+				
+				// Aplicar gravidade e movimento
+		        var _return = entity_collision(hspd, vspd);
+		        hspd = _return.hspd;
+		        vspd = _return.vspd;
+		        on_ground = _return.on_ground;
+				
+				// Condições de saída
+				// Se colidiu, volta para idle
+				if (on_ground || _return.hspd_col || _return.vspd_col) {
+					state_change(states.idle);
+					return;
+				}
+				
+		        // Mínimo de tempo no estado para evitar saída instantânea
+		        if (states.pogo.timer > pogo_duration) {
+		            
+		            // Se ainda está no ar
+		            if (!on_ground) {
+		                // Vai para jump se subindo, fall se descendo
+		                if (vspd < 0) {
+		                    state_change(states.jump);
+		                } else {
+		                    state_change(states.fall);
+		                }
+		                return;
+		            }
+		        }
+				
+			});
+
+			states.pogo.leave = method(self, function () {
+		        can_move = true;
+		        can_attack = true;
+		        can_jump = true;
+		        can_turn = true;
+		        image_blend = c_white; // Resetar cor
+			});
+	
+
+		#endregion
+
 		#region Dashing
 
 			states.dash.init = method(self, function () {
@@ -352,7 +452,7 @@
 				dash_vspd = lengthdir_y(-dash_speed, dash_direction);
 				
 				// Inicia o timer do dash
-				states.dash.timer = dash_duration;
+				// states.dash.timer = dash_duration;
 				
 				// Incrementando a quantidade de dashes performados
 				dash_count++;
@@ -377,18 +477,18 @@
 				
 				change_sprite(spr_player_jump);
 				
-				// Decrementando o timer de dash
-				states.dash.timer--;
+				// Incrementando o timer de dash
+				states.dash.timer++;
 				
-		        // Termina o dash quando o timer chega a 0
-		        if (states.dash.timer <= 0) {
+		        // Termina o dash quando o timer passa a duração do dash
+		        if (states.dash.timer > dash_duration) {
 					if (!on_ground) {
 						state_change(states.fall);
 						return;
 					}
 					
 					// Fallback pra estado idle
-		            state_change(states.fall);
+		            state_change(states.idle);
 		            return;
 		        }
 		        
@@ -422,10 +522,13 @@
 		#region Inertia
 
 			states.inertia.init = method(self, function () {
-				
+				image_blend = c_fuchsia;
 			});
 	
 			states.inertia.run = method(self, function () {
+				states.inertia.timer++;
+				if states.inertia.timer == inertia_window
+					image_blend = c_green
 				
 			});
 	
